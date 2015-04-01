@@ -24,7 +24,7 @@ I think this is my most popular tweet ever:
     &mdash; James Socol (@<a href="http://twitter.com/jamessocol">jamessocol</a>) <a href="https://twitter.com/jamessocol/status/565906946780581889">February 12, 2015</a>
   </p>
 </blockquote>
-
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 
 I&#8217;ve known about this little quirk for a while, but I shared it because it still amuses me. It shocks and confuses people. Some people tried to make sense of it
@@ -39,8 +39,6 @@ I&#8217;ve known about this little quirk for a while, but I shared it because it
   </p>
 </blockquote>
 
-
-
 And some were just appalled
 
 <blockquote class="twitter-tweet" data-conversation="none" lang="en">
@@ -53,17 +51,15 @@ And some were just appalled
   </p>
 </blockquote>
 
-
-
 So what actually *is* going on here? To answer, we need to take a dive into the world of CPython *opcodes* and spend some time with the [`dis` module][1].
 
 Let&#8217;s start by disassembling and digging into a very simple set of statements:
 
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=1f.py"></script>
 
 And the output:
 
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=1o.dis"></script>
 
 The left-most number is the line number (line 1 is `def f1():`) then an offset we&#8217;ll ignore, then the opcode, then some information about the arguments to the opcode.
 
@@ -81,9 +77,9 @@ Immutability is going to be very important, so keep that in mind. There is no in
 
 Let&#8217;s change `f1` slightly and see what happens:
 
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=2f.py"></script>
 
-
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=2o.dis"></script>
 
 Line 2 is the same: push `` onto the stack, then pop it and store it in local variable 0/`a`.
 
@@ -91,9 +87,9 @@ Line 3 starts off the same: we still load `a` and push it onto the stack, then l
 
 OK, integers are fun, but what about a more interesting type, like a list?
 
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=3f.py"></script>
 
-
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=3o.dis"></script>
 
 Start with the LHS of line 2: `BUILD_LIST 0` takes zero objects off the top of the stack, builds a list object, and pushes that list onto the stack. Then we `STORE_FAST` which puts that list into `a`.
 
@@ -101,9 +97,9 @@ On line 3, because we&#8217;re doing an &#8220;inplace&#8221; add again, we foll
 
 Now let&#8217;s compare that with calling `.extend()`:
 
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=4f.py"></script>
 
-
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=4o.dis"></script>
 
 On line 3, we push the list from `a` onto the stack, then call `LOAD_ATTR` to pop it off the stack, and then push a reference to the `extend` attribute onto the stack. `LOAD_CONST` to push `1` onto stack, `BUILD_LIST` replaces it with a list `[1]` then `CALL_FUNCTION 1` which pops 1 value from the stack to use as a function argument, then pops the function, and finally calls the function, which, in this case, extends the list with that value, then pushes the result onto the stack.
 
@@ -111,9 +107,9 @@ What happens next is interesting. We do *not* call `STORE_FAST`. Lists are *muta
 
 At this point, we can basically understand how this bizarre error both works and fails at the &#8220;same time,&#8221; but there&#8217;s one more type of operation we should cover.
 
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=5f.py"></script>
 
-
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=5o.dis"></script>
 
 Line 2 builds a list just like we&#8217;ve been doing: `LOAD_CONST` to put `5` on the stack, `BUILD_LIST 1` to build a list with 1 value from the stack, and `STORE_FAST` to pop the list from the top of the stack and store it into `a`.
 
@@ -125,9 +121,9 @@ Line 3 `LOAD_FAST`s the list onto the stack, then `LOAD_CONST` the index (0) fro
 
 OK! Finally, we&#8217;ve got everything we need to look at the our favorite bizarre behavior:
 
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=6f.py"></script>
 
-
-
+<script src="https://gist.github.com/jsocol/1c1912c755512c41fc61.js?file=6o.dis"></script>
 
 Line 2: build a list and push it. (`[]`) Pop it and use it to build a tuple, then push the tuple (`([],)`) Pop the tuple and store it.
 
