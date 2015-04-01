@@ -1,0 +1,11 @@
+# Site settings
+url: http://coffeeonthekeyboard.com
+name: Coffee on the Keyboard
+description: by James Socol
+email: me@jamessocol.com
+twitter_username: jamessocol
+github_username: jsocol
+
+# Build settings
+markdown: kramdown
+highlighter: pygments
