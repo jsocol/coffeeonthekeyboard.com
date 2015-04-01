@@ -65,7 +65,7 @@ The left-most number is the line number (line 1 is `def f1():`) then an offset w
 
 All of these opcodes operate on &#8220;the stack,&#8221; and most often on the value on the top of the stack, `TOS`. We load values onto the stack from constants, functions, and in-scope variables, and we can store values into in-scope variables. Sometimes we&#8217;ll deal with a couple of values at once, which we&#8217;ll call `TOSn`, where `n` is the depth in the stack. Since the stack is, after all, a stack, we can&#8217;t operate on `TOS1` unless we&#8217;re also operating on `TOS`.
 
-Line 2 has two operations: `LOAD_CONST`, which pushes the constant `` onto the stack. Then `STORE_FAST` takes the value off the top of the stack and stores it in the local variable `a`, which is a human name for variable number ``.
+Line 2 has two operations: `LOAD_CONST`, which pushes the constant `1` onto the stack. Then `STORE_FAST` takes the value off the top of the stack and stores it in the local variable `a`, which is a human name for variable number ``.
 
 Line 3 is a little more interesting: first we load the value from `a` onto the stack (`LOAD_FAST`), then load the constant `1` on top of it (`LOAD_CONST` again). The `INPLACE_ADD` operation pops the top two stack values, executes `__iadd__`, and pushes the result back onto the stack. Then `STORE_FAST` takes the value off the top of the stack and stores it back into `a`.
 
